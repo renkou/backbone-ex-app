@@ -7,7 +7,34 @@ var express = require('express'),
     request = require('request'),
     session = require('express-session'),
     csrf = require('csurf'),
-    override = require('method-override')
+    override = require('method-override'),
+    //Mongoose code start
+    mongoose = require('mongoose')
+
+
+
+mongoose.connect('mongodb://localhost/blogroll'); //creates blogroll dir
+
+var Schema = mongoose.Schema; //figures out format introduced to it
+
+var BlogSchema = new Schema({ //schema matches model on client side
+    author: String,
+    title: String,
+    url: String
+});
+
+mongoose.model('Blog', BlogSchema);
+
+var Blog = mongoose.model('Blog'); //shortcut to access blog schema
+
+//example instance of blog entry in the db
+var blog = new Blog({
+    author: 'Steven',
+    title: 'a',
+    url: 'asdf'
+});
+blog.save();
+//Mongoose code end
 
 function startServer() {
 
