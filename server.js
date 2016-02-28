@@ -1,23 +1,20 @@
-require('babel/register')
-
 var express = require('express'),
+    mongoose = require('mongoose'),
     http = require('http'),
     path = require('path'),
-    app = express(),
     request = require('request'),
     session = require('express-session'),
     csrf = require('csurf'),
     override = require('method-override'),
-    //Mongoose code start
-    mongoose = require('mongoose')
+    bodyParser = require('body-parser'),
+    $ = require('jquery'),
+    _ = require('underscore');
 
+mongoose.connect('mongodb://localhost/blogroll');
 
+var Schema = mongoose.Schema;
 
-mongoose.connect('mongodb://localhost/blogroll'); //creates blogroll dir
-
-var Schema = mongoose.Schema; //figures out format introduced to it
-
-var BlogSchema = new Schema({ //schema matches model on client side
+var BlogSchema = new Schema({
     author: String,
     title: String,
     url: String
@@ -25,72 +22,60 @@ var BlogSchema = new Schema({ //schema matches model on client side
 
 mongoose.model('Blog', BlogSchema);
 
-var Blog = mongoose.model('Blog'); //shortcut to access blog schema
+var Blog = mongoose.model('Blog');
 
-//example instance of blog entry in the db
-var blog = new Blog({
-    author: 'Steven',
-    title: 'a',
-    url: 'asdf'
-});
-blog.save();
-//Mongoose code end
+// var blog = new Blog({
+//     author: 'Michael',
+//     title: 'Michael\'s Blog',
+//     url: 'http://michaelsblog.com'
+// });
 
-function startServer() {
+// blog.save();
 
-    function querify(queryParamsObject) {
-        var params = Object.keys(queryParamsObject).map(function(val, key) {
-            return val + '=' + queryParamsObject[val]
-        }).join('&')
-        return params.length === 0 ? '' : '?' + params
-    }
+var app = express();
 
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, '')));
 
-    // adds a new rule to proxy a localUrl -> webUrl
-    // i.e. proxify ('/my/server/google', 'http://google.com/')
-    function proxify(localUrl, webUrl){
-        app.get(localUrl, (req, res) => {
-            var tokens = webUrl.match(/:(\w+)/ig)
-            var remote = (tokens || []).reduce((a, t) => {
-                return a.replace(new RegExp(t, 'ig'), req.params[t.substr(1)])
-            }, webUrl)
-            req.pipe( request(remote + querify(req.query)) ).pipe(res)
+// ROUTES
+
+app.get('/api/blogs', function(req, res) {
+    Blog.find(function(err, docs) {
+        docs.forEach(function(item) {
+            console.log("Received a GET request for _id: " + item._id);
         })
+        res.send(docs);
+    });
+});
+
+app.post('/api/blogs', function(req, res) {
+    console.log('Received a POST request:')
+    for (var key in req.body) {
+        console.log(key + ': ' + req.body[key]);
     }
+    var blog = new Blog(req.body); //.body comes from the body-parser
+    blog.save(function(err, doc) {
+        res.send(doc);
+    });
+});
 
-    // add your proxies here.
-    //
-    // examples:
-    // proxify('/yummly/recipes', 'http://api.yummly.com/v1/api/recipes');
-    // proxify('/brewery/styles', 'https://api.brewerydb.com/v2/styles');
+app.delete('/api/blogs/:id', function(req, res) {
+    console.log('Received a DELETE request for _id: ' + req.params.id);
+    Blog.remove({_id: req.params.id}, function(err, doc) {
+        res.send({_id: req.params.id});
+    });
+});
 
-    // all environments
-    app.set('port', process.argv[3] || process.env.PORT || 3000)
-    app.use(express.static(path.join(__dirname, '')))
+app.put('/api/blogs/:id', function(req, res) {
+    console.log('Received an UPDATE request for _id: ' + req.params.id);
+    Blog.update({_id: req.params.id}, req.body, function(err) {
+        res.send({_id: req.params.id});
+    });
+});
 
-    // SOME SECURITY STUFF
-    // ----------------------------
-    // more info: https://speakerdeck.com/ckarande/top-overlooked-security-threats-to-node-dot-js-web-applications
-    // ----
-    // remove some info so we don't divulge to potential
-    // attackers what platform runs the website
-    app.disable('x-powered-by')
-    // change the generic session cookie name
-    app.use(session({ secret: 'some secret', key: 'sessionId', cookie: {httpOnly: true, secure: true} }))
-    // enable overriding
-    app.use(override("X-HTTP-Method-Override"))
-    // enable CSRF protection
-    app.use(csrf())
-    app.use((req, res, next) => {
-        res.locals.csrftoken = req.csrfToken() // send the token to the browser app
-        next()
-    })
-    // ---------------------------
+app.set('port', process.argv[3] || process.env.PORT || 3000)
 
-    http.createServer(app).listen(app.get('port'), function() {
-        console.log('Express server listening on port ' + app.get('port'))
-    })
+http.createServer(app).listen(app.get('port'), function() {
+    console.log('Express server listening on port ' + app.get('port'))
+})
 
-}
-
-module.exports.startServer = startServer

@@ -29,6 +29,8 @@ var _ = require('underscore');
     // new Router()
 // }
 
+
+Backbone.Model.prototype.idAttribute = '_id';
 // Backbone Model (properties each instance will have)
 
 var Blog = Backbone.Model.extend({
@@ -42,7 +44,8 @@ var Blog = Backbone.Model.extend({
 //Backbone Collection (Collection of models)
 
 var Blogs = Backbone.Collection.extend({
-
+	//requests from this url
+	url: 'http://localhost:3000/api/blogs' 
 });
 
 //Test Blogs
@@ -102,6 +105,16 @@ var BlogView = Backbone.View.extend({
 		this.model.set('author', $('.author-update').val());
 		this.model.set('title', $('.title-update').val());
 		this.model.set('url', $('.url-update').val());
+
+		this.model.save(null, {
+			success: function(response) {
+				console.log('Successfully UPDATED blog with _id: ' + response.toJSON()._id);
+			},
+
+			error: function(response) {
+				console.log('Failed to UPDATE blog');
+			}
+		});
 	},
 
 	cancel: function() {
@@ -109,7 +122,15 @@ var BlogView = Backbone.View.extend({
 	},
 
 	delete: function(){
-		this.model.destroy(); //destroys the selected/current individual blog
+		this.model.destroy({ //destroys the selected/current individual blog
+			success: function(response) {
+				console.log('Successfully DELETED blog with _id: ' + response.toJSON()._id);
+			},
+
+			error: function() {
+				console.log('Failed to delete blog');
+			}
+		}); 
 	},
 
 	render: function() {
@@ -140,6 +161,18 @@ var BlogsView = Backbone.View.extend({
 		}, this); //run on change or edit, call to render new values after 30 millisecs
 
 		this.model.on('remove', this.render, this); //re-render the page after item has been destroyed
+	
+		this.model.fetch({
+			success: function(response) {
+				_.each(response.toJSON(), function(item) {
+					console.log('Successfully GOT blog with _id: ' + item._id);
+				});
+			},
+
+			error: function() {
+				console.log('Failed to get blogs');
+			}
+		});
 	},
 
 	render: function() {
@@ -167,7 +200,7 @@ $(document).ready(function(){
 		var blog = new Blog({
 			author: $('.author-input').val(),
 			title: $('.title-input').val(),
-			url: $('.url-input').val(),
+			url: $('.url-input').val()
 		});
 		
 		//clears the input box after adding
@@ -175,6 +208,15 @@ $(document).ready(function(){
 		$('.title-input').val('');
 		$('.url-input').val('');
 		blogs.add(blog); // adds the newly created blog to the instantiated blogs collection, not Blogs
+
+		blog.save(null, {
+			success: function(response) {
+				console.log('Successfully SAVED blog with _id: ' + response.toJSON()._id);
+			},
+			error: function() {
+				console.log('Failed to save blog');
+			}
+		});
 	});
 });
 
