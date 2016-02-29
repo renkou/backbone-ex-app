@@ -10,6 +10,8 @@ var express = require('express'),
     $ = require('jquery'),
     _ = require('underscore');
 
+function startServer() {
+
 mongoose.connect('mongodb://localhost/blogroll');
 
 var Schema = mongoose.Schema;
@@ -79,3 +81,5 @@ http.createServer(app).listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'))
 })
 
+}
+module.exports.startServer = startServer;
