@@ -46,7 +46,6 @@ var Blog = Backbone.Model.extend({
 var Blogs = Backbone.Collection.extend({
 	//requests from this url
 	//do i need to change this for heroku
-	url: 'http://localhost:3000/api/blogs' 
 });
 
 //Test Blogs
