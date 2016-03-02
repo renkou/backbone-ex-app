@@ -46,6 +46,7 @@ var Blog = Backbone.Model.extend({
 var Blogs = Backbone.Collection.extend({
 	//requests from this url
 	//do i need to change this for heroku
+	url: "https://api.mongolab.com/api/1/databases/heroku_tn9lghb3/collections/Blogs?apiKey=your_key0zXUL-Mg5Xk4xkvMV0awiKHJSbPx04rc"
 });
 
 //Test Blogs
