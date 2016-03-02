@@ -11,8 +11,8 @@ var express = require('express'),
     _ = require('underscore');
 
 function startServer() {
-
-mongoose.connect('mongodb://localhost/blogroll');
+console.log(process);
+mongoose.connect(process.env.MONGOLAB_URI);
 
 var Schema = mongoose.Schema;
 
