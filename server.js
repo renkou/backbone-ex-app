@@ -12,7 +12,7 @@ var express = require('express'),
 
 function startServer() {
 console.log(process);
-mongoose.connect(process.MONGOLAB_URI);
+// mongoose.connect(process.MONGOLAB_URI);
 
 var Schema = mongoose.Schema;
 
